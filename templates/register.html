@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<script src="{{ url_for('static', filename='register.js') }}"></script>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <form id="form_new_user" action="{{ url_for('add_user') }}" method="POST">
+                <div class="form-group">
+                    <label>User Name</label>
+                    <input type="text" class="form-control" name="username" placeholder="Enter something" id="username">
+                </div>
+                <button id="submit" type="submit" class="btn btn-primary">Sign In</button>
+    </form>
+    
+</div>
+{% endblock %}
+
+
