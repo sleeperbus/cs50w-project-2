@@ -3,15 +3,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!localStorage.getItem("channel"))
         localStorage.setItem("channel", "general")
 
-    channel = localStorage.getItem("channel")
+    current_channel = localStorage.getItem("channel")
 
     // get chat data of last visitied channel
-    const request = new XMLHttpRequest();
-    request.open('POST', '/get_messages');
+    const req_messgae_history = new XMLHttpRequest();
+    req_messgae_history.open('POST', '/get_messages');
 
     // set callback 
-    request.onload = () => {
-        const data = JSON.parse(request.responseText);
+    req_messgae_history.onload = () => {
+        const data = JSON.parse(req_messgae_history.responseText);
         if (data.success) {
             data.messages.forEach(message => {
                 const li = document.createElement("li");
@@ -22,29 +22,48 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-
-    // add data to send with request
+    // add data to send with req_messgae_history
     const data = new FormData();
-    data.append('channel', channel);
-    request.send(data);
+    data.append('channel', current_channel);
+    req_messgae_history.send(data);
 
+
+
+    // set chatting application 
     var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
     socket.on('connect', () => {
+        // send message
         document.querySelector("#message_form").onsubmit = () => {
             const new_message = document.querySelector("#new_message").value;
             document.querySelector("#new_message").value = '';
-            socket.emit('submit message', {'channel': channel, 'message': new_message});
+            socket.emit('submit message', {'channel': current_channel, 'message': new_message});
+            return false;
+        }
+
+        // create new channel
+        document.querySelector("#channel_form").onsubmit = () => {
+            const new_channel = document.querySelector("#new_channel").value;
+            document.querySelector("#new_channel").value = '';
+            socket.emit('submit new channel', {'channel': new_channel});
             return false;
         }
     })
 
+    // receive new message
     socket.on('message everywhere', data => {
-        if (channel == data.channel) {
+        if (current_channel == data.channel) {
             const li = document.createElement("li");
             li.innerHTML = data.message;
             document.querySelector("#messages").append(li);
         }
+    });
+
+    // receive new channel
+    socket.on('new channel', data => {
+        const li = document.createElement("li");
+        li.innerHTML = `<a href='#${data.channel}'>${data.channel}</a>`;
+        document.querySelector("#channel-list").append(li);
     });
 
 

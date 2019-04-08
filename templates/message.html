@@ -10,12 +10,48 @@
 
 <div class="wrapper">
     <div class="sidenav">
-        <a href="#general">General</a>
-        <a href="#it">It</a>
-        <a href="#book">Book</a>
+        <!-- channel list         -->
+        <ul id="channel-list">
+            {% for channel in channels %}
+                <li><a href="#{{ channel }}">{{ channel }}</a></li>
+            {% endfor %}
+        </ul>
     </div>
 
     <div class="main">
+        <!-- new channel  -->
+        <div id="channel">
+            <!-- button trigger modal -->
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createChannel">New Channel</button> 
+
+            <!-- modal  -->
+            <div class="modal fade" id="createChannel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                    <form id="channel_form">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Create New Channel</h5>
+                                <button type="buttton" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                    <div class="form-group">
+                                        <label for="channel-name" class="col-form-label">New Channel:</label>
+                                        <input type="text" class="form-control" id="new_channel" autocomplete="off">
+                                    </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary" >Create Channel</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
         <div id="chat">
             <ul id="messages">
             </ul>
