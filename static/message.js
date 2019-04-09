@@ -3,7 +3,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!localStorage.getItem("channel"))
         localStorage.setItem("channel", "general")
 
-    current_channel = localStorage.getItem("channel")
+    var current_channel = localStorage.getItem("channel")
+    const username = localStorage.getItem("username")
 
     // get chat data of last visitied channel
     const req_messgae_history = new XMLHttpRequest();
@@ -13,9 +14,14 @@ document.addEventListener("DOMContentLoaded", () => {
     req_messgae_history.onload = () => {
         const data = JSON.parse(req_messgae_history.responseText);
         if (data.success) {
-            data.messages.forEach(message => {
+            data.messages.forEach(data => {
                 const li = document.createElement("li");
-                li.innerHTML = message;
+                li.innerHTML = `${data.username} : ${data.message}`;
+                if (data.username == username)
+                    li.className = "me";
+                else
+                    li.className = "others";
+
                 document.querySelector("#messages").append(li);
             })
         } else {
@@ -37,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.querySelector("#message_form").onsubmit = () => {
             const new_message = document.querySelector("#new_message").value;
             document.querySelector("#new_message").value = '';
-            socket.emit('submit message', {'channel': current_channel, 'message': new_message});
+            socket.emit('submit message', {'channel': current_channel, 'message': new_message, 'username': username});
             return false;
         }
 
@@ -54,7 +60,12 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on('message everywhere', data => {
         if (current_channel == data.channel) {
             const li = document.createElement("li");
-            li.innerHTML = data.message;
+            li.innerHTML = `${data.username} : ${data.message}`; 
+            if (data.username == username)
+                li.className = "me";
+            else
+                li.className = "others";
+
             document.querySelector("#messages").append(li);
         }
     });

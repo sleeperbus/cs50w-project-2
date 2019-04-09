@@ -53,6 +53,14 @@ main
     /*height: 10%;*/
 }
 
+#messages .others {
+    color: black;
+}
+
+#messages .me {
+    color: grey;
+}
+
 
 /*
 Media Query

@@ -5,8 +5,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
 socketio = SocketIO(app)
 
-channels = {'general': ['this is first message', 'this is second message']}
-
+channels = {'general': [{'username': 'test_user1', 'message': 'this is first message'}]}
 
 @app.route("/")
 def index():
@@ -43,12 +42,13 @@ def get_messages():
 def send_message(data):
     channel = data['channel']
     message = data['message']
-    print('channel and message: {}'.format(",".join([channel, message])))
+    username = data['username']
+    # print('channel and message: {}'.format(",".join([channel, message])))
 
     if len(channels[channel]) >= 100:
-        l.pop(0)
-    channels[channel].append(message)
-    emit('message everywhere', {'channel': channel, 'message': message}, broadcast=True)
+        channel[channel].pop(0)
+    channels[channel].append({'username': username, 'message': message})
+    emit('message everywhere', {'channel': channel, 'message': message, 'username': username}, broadcast=True)
 
 
 @socketio.on("submit new channel")
@@ -58,6 +58,4 @@ def new_channel(data):
     if channel not in channels:
         channels[channel] = list()
         emit('new channel', {'channel': channel}, broadcast=True)
-
-
 
