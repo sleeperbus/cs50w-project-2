@@ -1,39 +1,102 @@
+if (!localStorage.getItem("channel"))
+    localStorage.setItem("channel", "general")
 
-document.addEventListener("DOMContentLoaded", () => {
-    if (!localStorage.getItem("channel"))
-        localStorage.setItem("channel", "general")
+var current_channel = localStorage.getItem("channel")
+const username = localStorage.getItem("username")
 
-    var current_channel = localStorage.getItem("channel")
-    const username = localStorage.getItem("username")
+// clear message section
+function clear_message_section() {
+    var messages = document.getElementById("messages")
+    while (messages.hasChildNodes()) {
+        messages.removeChild(messages.firstChild)
+    }
+}
 
+// new message to channel
+function append_message_to_channel(data) {
+    const li = document.createElement("li");
+    li.innerHTML = `${data.username} : ${data.message}`;
+    if (data.username == username)
+        li.className = "me";
+    else
+        li.className = "others";
+
+    document.querySelector("#messages").append(li);
+}
+
+// recent channel messages
+function get_channel_message(channel) {
     // get chat data of last visitied channel
     const req_messgae_history = new XMLHttpRequest();
     req_messgae_history.open('POST', '/get_messages');
 
     // set callback 
     req_messgae_history.onload = () => {
+        clear_message_section();
         const data = JSON.parse(req_messgae_history.responseText);
         if (data.success) {
-            data.messages.forEach(data => {
-                const li = document.createElement("li");
-                li.innerHTML = `${data.username} : ${data.message}`;
-                if (data.username == username)
-                    li.className = "me";
-                else
-                    li.className = "others";
-
-                document.querySelector("#messages").append(li);
+            data.messages.forEach(single_data => {
+                append_message_to_channel(single_data)
             })
-        } else {
-        }
+        } 
     }
 
     // add data to send with req_messgae_history
     const data = new FormData();
-    data.append('channel', current_channel);
+    data.append('channel', channel);
     req_messgae_history.send(data);
+}
+
+// get all channel names
+function get_channels() {
+    let req_channels = new XMLHttpRequest();
+    req_channels.open("POST", "/all_channels");
+
+    req_channels.onload = () => {
+        let data = JSON.parse(req_channels.responseText)        
+        if (data.success) {
+            data.channels.forEach(channel => {
+                create_new_channel(channel)
+            })
+        }
+    }
+    req_channels.send();
+}
 
 
+// new channel
+function create_new_channel(channel) {
+    const li = document.createElement("li");
+    li.innerHTML = `<a href='#${channel}' data-channel=${channel} class="channel">${channel}</a>`;
+    li.onclick = () => {
+       // var selected_channel = this.dataset.channel;
+       current_channel = channel;
+       localStorage.setItem("channel", current_channel);
+       this.className = "selected_channel channel";
+       get_channel_message(current_channel);
+    }
+
+    document.querySelector("#channel-list").append(li);
+}
+
+// activate channel 
+function activate_channel(selected_channel) {
+    document.querySelectorAll(".channel").forEach(channel => {
+        if (selected_channel == channel.dataset.channel) {
+            channel.className = "channel selected_channel";
+        } else {
+            channel.className = "channel";
+        }
+    })
+}
+
+
+// 
+document.addEventListener("DOMContentLoaded", () => {
+    // get chat data of last visitied channel
+
+    get_channels();
+    get_channel_message(current_channel);
 
     // set chatting application 
     var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
@@ -59,23 +122,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // receive new message
     socket.on('message everywhere', data => {
         if (current_channel == data.channel) {
-            const li = document.createElement("li");
-            li.innerHTML = `${data.username} : ${data.message}`; 
-            if (data.username == username)
-                li.className = "me";
-            else
-                li.className = "others";
-
-            document.querySelector("#messages").append(li);
+            append_message_to_channel(data)
         }
     });
 
-    // receive new channel
+    // receive new channel 
     socket.on('new channel', data => {
-        const li = document.createElement("li");
-        li.innerHTML = `<a href='#${data.channel}'>${data.channel}</a>`;
-        document.querySelector("#channel-list").append(li);
+        create_new_channel(data.channel);
+        // activate_channel(data.channel);
     });
-
-
 })
