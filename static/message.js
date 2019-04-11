@@ -58,6 +58,7 @@ function get_channels() {
             data.channels.forEach(channel => {
                 create_new_channel(channel)
             })
+            activate_channel(current_channel);
         }
     }
     req_channels.send();
@@ -65,15 +66,14 @@ function get_channels() {
 
 
 // new channel
-function create_new_channel(channel) {
+function create_new_channel(new_channel) {
     const li = document.createElement("li");
-    li.innerHTML = `<a href='#${channel}' data-channel=${channel} class="channel">${channel}</a>`;
+    li.innerHTML = `<a href='#${new_channel}' data-channel=${new_channel} class="channel">${new_channel}</a>`;
     li.onclick = () => {
-       // var selected_channel = this.dataset.channel;
-       current_channel = channel;
-       localStorage.setItem("channel", current_channel);
-       this.className = "selected_channel channel";
-       get_channel_message(current_channel);
+        current_channel = new_channel;
+        localStorage.setItem("channel", current_channel);
+        activate_channel(current_channel);
+        get_channel_message(current_channel);
     }
 
     document.querySelector("#channel-list").append(li);
@@ -81,9 +81,9 @@ function create_new_channel(channel) {
 
 // activate channel 
 function activate_channel(selected_channel) {
-    document.querySelectorAll(".channel").forEach(channel => {
+    document.querySelectorAll(".channel, .selected_channel").forEach(channel => {
         if (selected_channel == channel.dataset.channel) {
-            channel.className = "channel selected_channel";
+            channel.className = "selected_channel";
         } else {
             channel.className = "channel";
         }
@@ -91,7 +91,6 @@ function activate_channel(selected_channel) {
 }
 
 
-// 
 document.addEventListener("DOMContentLoaded", () => {
     // get chat data of last visitied channel
 
@@ -113,8 +112,11 @@ document.addEventListener("DOMContentLoaded", () => {
         // create new channel
         document.querySelector("#channel_form").onsubmit = () => {
             const new_channel = document.querySelector("#new_channel").value;
+            current_channel = new_channel;
             document.querySelector("#new_channel").value = '';
-            socket.emit('submit new channel', {'channel': new_channel});
+            // send everywhere
+            localStorage.setItem("channel", current_channel);
+            socket.emit('submit new channel', {'channel': current_channel});
             return false;
         }
     })
@@ -129,6 +131,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // receive new channel 
     socket.on('new channel', data => {
         create_new_channel(data.channel);
-        // activate_channel(data.channel);
+        if (data.channel == current_channel) {
+            activate_channel(current_channel);
+            get_channel_message(current_channel);
+        }
+
+
+
     });
 })
